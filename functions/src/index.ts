@@ -156,26 +156,24 @@ exports.payTotal = functions.https.onCall(async (data) => {
 });
 
 
-exports.notificaion = functions.firestore.document("order/{id}")
-    .onCreate(async (snapshot) => {
-      const orderData= snapshot.data();
-      const vendorId=await orderData.ids.vendorId;
-      const notificationDb = db.collection("notifications").doc();
-      notificationDb.set({tokens: [vendorId]});
-      if (vendorId) {
-        const payload={notification: {
-          title: "You have a new order",
-          body: "You have a new Order. Click to open your dashboard",
-        },
-        };
-        return admin.messaging().sendToTopic("orders",
-            payload).then((response)=>{
-          console.log("Notification sent successfully:", response);
-        }).catch((e)=>{
-          console.log("Notification sending failed", e);
-        });
-      }
-    });
+// exports.notificaion = functions.firestore.document("order/{id}")
+//     .onCreate(async (snapshot) => {
+//       const orderData= snapshot.data();
+//       const vendorId=await orderData.ids.vendorId;
+//       if (vendorId) {
+//         const payload={notification: {
+//           title: "You have a new order",
+//           body: "You have a new Order. Click to open your dashboard",
+//         },
+//         };
+//         return admin.messaging().sendToTopic("orders",
+//             payload).then((response)=>{
+//           console.log("Notification sent successfully:", response);
+//         }).catch((e)=>{
+//           console.log("Notification sending failed", e);
+//         });
+//       }
+//     });
 
 exports.app = functions.https.onRequest(app);
 
