@@ -24,7 +24,7 @@ export const addItem = async (req: Request, res: Response) => {
         id: item.id,
         name: name,
         price: price,
-        vendorid: vendorData.id,
+        vendorId: vendorData.id,
       };
       await item.set(itemObject);
       await vendor.update({

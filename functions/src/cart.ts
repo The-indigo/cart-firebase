@@ -47,6 +47,7 @@ export const addToCart = async (req: Request, res: Response) => {
         itemQuantity: itemQuantity,
         itemPrice: price,
         itemOrderTotal: itemQuantity*price,
+        itemVendor: itemData.vendorid,
       },
     };
 
