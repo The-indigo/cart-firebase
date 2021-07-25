@@ -12,6 +12,9 @@ type Request = {
     body: itemType,
     params: { vendorId: string }
 }
+// function to add items to the db and update the
+// vendor collection to add the item to the list
+// of the vendor's item field
 export const addItem = async (req: Request, res: Response) => {
   const {name, price} = req.body;
   const id = req.params.vendorId;

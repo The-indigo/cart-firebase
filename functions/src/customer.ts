@@ -10,6 +10,7 @@ type Request ={
     body:CustomerType,
     params: {customerId: string}
 }
+// adds a customer(user) to the db
 export const addCustomer= async (req:Request, res:Response)=>{
   const {name, email}= req.body;
   try {

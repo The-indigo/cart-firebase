@@ -21,22 +21,10 @@ app.post("/vendor", addVendor);
 app.post("/item/:vendorId", addItem);
 app.post("/cart", addToCart);
 
-// async function publishMessage(messageConfig:any) {
-//   try {
-//       const pubSubClient = new PubSub()
 
-//       const topicName = messageConfig.topicName;
-//       const pubSubPayload = messageConfig.pubSubPayload;
-
-//       let dataBuffer = Buffer.from(JSON.stringify(pubSubPayload));
-//       await pubSubClient.topic(topicName).publish(dataBuffer);
-
-//   } catch (error) {
-//       throw error;
-//   }
-// }
-
-exports.pay = functions.https.onCall(async (data) => {
+// this function calculates the total of all
+// itemOrderTotatal in a user's cart
+exports.calculateCartTotal = functions.https.onCall(async (data) => {
   const custCartItems: FirebaseFirestore.DocumentData[] = [];
   try {
     const user = db.collection("customer").doc(data.customerId);
@@ -61,6 +49,9 @@ exports.pay = functions.https.onCall(async (data) => {
     throw new functions.https.HttpsError("invalid-argument", error);
   }
 });
+
+// this function uses the paystack api to make payment
+// for the amount calculates in calculateCartTotal
 // let orderDone:any;
 exports.payTotal = functions.https.onCall(async (data) => {
   const user = db.collection("customer").doc(data.customerId);
@@ -155,25 +146,26 @@ exports.payTotal = functions.https.onCall(async (data) => {
   }
 });
 
-
-// exports.notificaion = functions.firestore.document("order/{id}")
-//     .onCreate(async (snapshot) => {
-//       const orderData= snapshot.data();
-//       const vendorId=await orderData.ids.vendorId;
-//       if (vendorId) {
-//         const payload={notification: {
-//           title: "You have a new order",
-//           body: "You have a new Order. Click to open your dashboard",
-//         },
-//         };
-//         return admin.messaging().sendToTopic("orders",
-//             payload).then((response)=>{
-//           console.log("Notification sent successfully:", response);
-//         }).catch((e)=>{
-//           console.log("Notification sending failed", e);
-//         });
-//       }
-//     });
+// this function tries to send a notification to the vendors
+// when a user makes payment for their item(s)
+exports.notificaion = functions.firestore.document("order/{id}")
+    .onCreate(async (snapshot) => {
+      const orderData= snapshot.data();
+      const vendorId=await orderData.ids.vendorId;
+      if (vendorId) {
+        const payload={notification: {
+          title: "You have a new order",
+          body: "You have a new Order. Click to open your dashboard",
+        },
+        };
+        return admin.messaging().sendToTopic("orders",
+            payload).then((response)=>{
+          console.log("Notification sent successfully:", response);
+        }).catch((e)=>{
+          console.log("Notification sending failed", e);
+        });
+      }
+    });
 
 exports.app = functions.https.onRequest(app);
 

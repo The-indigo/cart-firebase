@@ -9,6 +9,7 @@ type Request = {
         itemId:string
      },
 }
+// add items to cart by a customer
 export const addToCart = async (req: Request, res: Response) => {
   const {itemQuantity, customerId, itemId} = req.body;
 

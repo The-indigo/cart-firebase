@@ -11,6 +11,7 @@ type Request ={
     body:VendorType,
     params: {vendorId: string}
 }
+// function to add a vendor
 export const addVendor= async (req:Request, res:Response)=>{
   const {name, email}= req.body;
   try {
