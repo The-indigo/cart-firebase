@@ -10,10 +10,11 @@ type Request ={
     body:CustomerType,
     params: {customerId: string}
 }
+// adds a customer(user) to the db
 export const addCustomer= async (req:Request, res:Response)=>{
   const {name, email}= req.body;
   try {
-    const customer=await db.collection("customer").doc();
+    const customer= db.collection("customer").doc();
     const customerObject={
       id: customer.id,
       name: name,

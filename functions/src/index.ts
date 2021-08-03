@@ -1,9 +1,12 @@
+// this is the main app.js file. it also includes callable functions
+// for calculating customer totals,
+// sending notifications and making payments with paystack
 import * as functions from "firebase-functions";
 import * as express from "express";
 import {addCustomer} from "./customer";
 import {addVendor} from "./vendor";
 import {addItem} from "./item";
-import {addToCart} from "./cart";
+import {addToCart, removeFromCart} from "./cart";
 import {db} from "./config/firebase";
 import axios from "axios";
 import * as dotenv from "dotenv";
@@ -19,23 +22,24 @@ app.post("/customer", addCustomer);
 app.post("/vendor", addVendor);
 app.post("/item/:vendorId", addItem);
 app.post("/cart", addToCart);
+app.delete("/cart", removeFromCart);
+// this function calculates the itemOrderTotal in the cart
+// when an item has been added to the cart
+exports.calculateitemOrderTotal = functions.firestore.document("cart/{id}")
+    .onCreate(async (snapshot, context) => {
+      const cartData = snapshot.data();
+      const cartItemTotal= await db.collection("cart").
+          doc(cartData.id).update({
+            "itemDetails.itemOrderTotal": cartData.itemDetails.
+                itemQuantity * cartData.itemDetails.itemPrice,
+          });
+      return cartItemTotal;
+    });
 
-// async function publishMessage(messageConfig:any) {
-//   try {
-//       const pubSubClient = new PubSub()
 
-//       const topicName = messageConfig.topicName;
-//       const pubSubPayload = messageConfig.pubSubPayload;
-
-//       let dataBuffer = Buffer.from(JSON.stringify(pubSubPayload));
-//       await pubSubClient.topic(topicName).publish(dataBuffer);
-
-//   } catch (error) {
-//       throw error;
-//   }
-// }
-
-exports.pay = functions.https.onCall(async (data) => {
+// this function calculates the total of all
+// itemOrderTotatal in a user's cart
+exports.calculateCartTotal = functions.https.onCall(async (data) => {
   const custCartItems: FirebaseFirestore.DocumentData[] = [];
   try {
     const user = db.collection("customer").doc(data.customerId);
@@ -60,7 +64,9 @@ exports.pay = functions.https.onCall(async (data) => {
     throw new functions.https.HttpsError("invalid-argument", error);
   }
 });
-// let orderDone:any;
+
+// this function uses the paystack api to make payment
+// for the amount calculates in calculateCartTotal
 exports.payTotal = functions.https.onCall(async (data) => {
   const user = db.collection("customer").doc(data.customerId);
 
@@ -155,25 +161,4 @@ exports.payTotal = functions.https.onCall(async (data) => {
 });
 
 
-// exports.notificaion = functions.firestore.document("order/{id}")
-//     .onCreate(async (snapshot) => {
-//       const orderData= snapshot.data();
-//       const vendorId=await orderData.ids.vendorId;
-//       if (vendorId) {
-//         const payload={notification: {
-//           title: "You have a new order",
-//           body: "You have a new Order. Click to open your dashboard",
-//         },
-//         };
-//         return admin.messaging().sendToTopic("orders",
-//             payload).then((response)=>{
-//           console.log("Notification sent successfully:", response);
-//         }).catch((e)=>{
-//           console.log("Notification sending failed", e);
-//         });
-//       }
-//     });
-
 exports.app = functions.https.onRequest(app);
-
-
