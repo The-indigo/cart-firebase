@@ -1,6 +1,3 @@
-// this is the main app.js file. it also includes callable functions
-// for calculating customer totals,
-// sending notifications and making payments with paystack
 import * as functions from "firebase-functions";
 import * as express from "express";
 import {addCustomer} from "./customer";
