@@ -1,13 +1,15 @@
+// this is the main app.js file. it also includes callable functions
+// for calculating customer totals,
+// sending notifications and making payments with paystack
 import * as functions from "firebase-functions";
 import * as express from "express";
 import {addCustomer} from "./customer";
 import {addVendor} from "./vendor";
 import {addItem} from "./item";
-import {addToCart} from "./cart";
+import {addToCart, removeFromCart} from "./cart";
 import {db} from "./config/firebase";
 import axios from "axios";
 import * as dotenv from "dotenv";
-import * as admin from "firebase-admin";
 // import {PubSub} from "@google-cloud/pubsub"
 
 dotenv.config();
@@ -20,6 +22,19 @@ app.post("/customer", addCustomer);
 app.post("/vendor", addVendor);
 app.post("/item/:vendorId", addItem);
 app.post("/cart", addToCart);
+app.delete("/cart", removeFromCart);
+// this function calculates the itemOrderTotal in the cart
+// when an item has been added to the cart
+exports.calculateitemOrderTotal = functions.firestore.document("cart/{id}")
+    .onCreate(async (snapshot, context) => {
+      const cartData = snapshot.data();
+      const cartItemTotal= await db.collection("cart").
+          doc(cartData.id).update({
+            "itemDetails.itemOrderTotal": cartData.itemDetails.
+                itemQuantity * cartData.itemDetails.itemPrice,
+          });
+      return cartItemTotal;
+    });
 
 
 // this function calculates the total of all
@@ -52,7 +67,6 @@ exports.calculateCartTotal = functions.https.onCall(async (data) => {
 
 // this function uses the paystack api to make payment
 // for the amount calculates in calculateCartTotal
-// let orderDone:any;
 exports.payTotal = functions.https.onCall(async (data) => {
   const user = db.collection("customer").doc(data.customerId);
 
@@ -146,27 +160,5 @@ exports.payTotal = functions.https.onCall(async (data) => {
   }
 });
 
-// this function tries to send a notification to the vendors
-// when a user makes payment for their item(s)
-exports.notificaion = functions.firestore.document("order/{id}")
-    .onCreate(async (snapshot) => {
-      const orderData= snapshot.data();
-      const vendorId=await orderData.ids.vendorId;
-      if (vendorId) {
-        const payload={notification: {
-          title: "You have a new order",
-          body: "You have a new Order. Click to open your dashboard",
-        },
-        };
-        return admin.messaging().sendToTopic("orders",
-            payload).then((response)=>{
-          console.log("Notification sent successfully:", response);
-        }).catch((e)=>{
-          console.log("Notification sending failed", e);
-        });
-      }
-    });
 
 exports.app = functions.https.onRequest(app);
-
-
