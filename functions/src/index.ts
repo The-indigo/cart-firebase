@@ -7,7 +7,6 @@ import {addToCart} from "./cart";
 import {db} from "./config/firebase";
 import axios from "axios";
 import * as dotenv from "dotenv";
-import * as admin from "firebase-admin";
 // import {PubSub} from "@google-cloud/pubsub"
 
 dotenv.config();
